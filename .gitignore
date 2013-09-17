@@ -1,5 +1,6 @@
 ft6.conf
 *.pyc
+tags
 
 .DS_Store
 .DS_Store?
