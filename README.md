@@ -5,7 +5,7 @@ ft6 is a _client-server_ program written in python that tests various IPv6 relat
 
 # Meta
 
-First things first: This is a fork of the software developed during [this project](www.idsv6.de/en). The project was held at University of Potsdam and is now finished.
+First things first: This is a fork of the software developed during [this project](http://www.idsv6.de/en). The project was held at University of Potsdam and is now finished.
 I was a student assistent working on the project and programmer of ft6.
 I now continue to develop ft6 on my own, without any involvement of the university.
 
