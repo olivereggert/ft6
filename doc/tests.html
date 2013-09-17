@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Understanding the tests &mdash; ft6 - Firewall Tester for IPv6 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ft6 - Firewall Tester for IPv6 1.0 documentation" href="index.html" />
+    <link rel="next" title="Interpreting the Results" href="results.html" />
+    <link rel="prev" title="Running ft6" href="running.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="results.html" title="Interpreting the Results"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="Running ft6"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="understanding-the-tests">
+<h1>Understanding the tests<a class="headerlink" href="#understanding-the-tests" title="Permalink to this headline">¶</a></h1>
+<p>ft6 comes with eight built-in tests. The tests were developed by <a class="reference external" href="http://www.eantc.de">EANTC</a>, who&#8217;ve put up a full specification that provides links to all the relevant RFCs. You can find it <a class="reference external" href="http://www.idsv6.de/Downloads/EANTC-IPv6-IDS-FW-Abstract-Test-Suite_v1.0-public.pdf">here</a>.</p>
+<p>We give only a short overview of the tests here, parts of the text have been borrowed from said document.
+We suggest you first check the details of every test in ft6&#8217;s user interface, which will hopefully make the internals of the test clear enough. If you would like additional information we encourage you to read EANTC&#8217;s pdf.</p>
+<div class="section" id="icmpv6-filtering">
+<span id="label-icmpv6-filtering"></span><h2>ICMPv6 Filtering<a class="headerlink" href="#icmpv6-filtering" title="Permalink to this headline">¶</a></h2>
+<p>This test verifies that the firewall is able to filter and forward certain ICMPv6 Messages. Some ICMPv6 must <em>never</em> be filtered (like <em>echo request</em> and <em>echo response</em>) some must <em>always</em> be filtered (you wouldn&#8217;t want anyone to map your internal network by sending <em>Neighbor Discovery</em> messages over the internet) and the rest <em>may</em> or <em>may not</em> be forwarded. ft6 sends every ICMPv6 Message to see how the firewall behaves.</p>
+</div>
+<div class="section" id="type-0-routing-header">
+<h2>Type 0 Routing Header<a class="headerlink" href="#type-0-routing-header" title="Permalink to this headline">¶</a></h2>
+<p>The <em>Type 0 Routing Header</em> (RH0) has been deprecated due to security concerns. With RH0 it was possible to specify what nodes a packet should visit on it&#8217;s way from the source to the destination. You could also configure loops, thus causing traffic congestion. Whether to forward or drop a packet containing a routing header is dependant on the value of the <em>segments-left</em> field.
+Also, your firewall should be able to filter based on the value of the <em>type</em> field, as other routing headers might be desired (such as type 2, used for IPv6 Mobility).</p>
+</div>
+<div class="section" id="header-chain-inspection">
+<h2>Header Chain Inspection<a class="headerlink" href="#header-chain-inspection" title="Permalink to this headline">¶</a></h2>
+<p>With IPv6 there have been introduced a number of <em>Extension Headers</em> that may or may not be present in each IPv6 datagram. There is a restriction on the <em>order</em> in which these headers may appear. ft6 sends a selection of valid and invalid packets.</p>
+</div>
+<div class="section" id="overlapping-fragments">
+<h2>Overlapping Fragments<a class="headerlink" href="#overlapping-fragments" title="Permalink to this headline">¶</a></h2>
+<p>When a node receives overlapping fragments it is possible that the &#8220;later&#8221; fragments <em>overwrite</em> data from &#8220;previous&#8221; fragments. This is can have considerable implications when the TCP destination port is overwritten. Your firewall should be able to detect and drop overlapping fragments but still permit non-overlapping fragments.</p>
+</div>
+<div class="section" id="tiny-fragments">
+<span id="label-tiny-fragments"></span><h2>Tiny Fragments<a class="headerlink" href="#tiny-fragments" title="Permalink to this headline">¶</a></h2>
+<p><em>Tiny Fragments</em> are fragments that don&#8217;t have a TCP or UDP header in the first fragment. The firewall has to wait for additional fragments until it can inspect the port to decide whether to forward or drop the packet. Receiving too many of these tiny fragments will cause the firewall&#8217;s reassembly buffers to fill which can lead to a denial of service. ft6 checks whether the firewall correctly drops the fragments after waiting for the timeout.</p>
+</div>
+<div class="section" id="excessive-hop-by-hop-options">
+<h2>Excessive Hop-By-Hop Options<a class="headerlink" href="#excessive-hop-by-hop-options" title="Permalink to this headline">¶</a></h2>
+<p>Each Hop-By-Hop Option should occur at most once in any IPv6 packet. ft6 sends a variety of duplicate options to see if the firewall drops them.</p>
+</div>
+<div class="section" id="padn-covert-channel">
+<h2>PadN Covert Channel<a class="headerlink" href="#padn-covert-channel" title="Permalink to this headline">¶</a></h2>
+<p>The PadN Option is used in Hop-By-Hop Option and Destination Option Headers to align options at 8-byte boundaries. The bytes used for padding are not interpreted according to the IPv6 standard but could be used to send messages covertly.</p>
+</div>
+<div class="section" id="address-scopes">
+<h2>Address Scopes<a class="headerlink" href="#address-scopes" title="Permalink to this headline">¶</a></h2>
+<p>Multicast addresses are not to be used as source addresses and link-local addresses should not be forwarded.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Understanding the tests</a><ul>
+<li><a class="reference internal" href="#icmpv6-filtering">ICMPv6 Filtering</a></li>
+<li><a class="reference internal" href="#type-0-routing-header">Type 0 Routing Header</a></li>
+<li><a class="reference internal" href="#header-chain-inspection">Header Chain Inspection</a></li>
+<li><a class="reference internal" href="#overlapping-fragments">Overlapping Fragments</a></li>
+<li><a class="reference internal" href="#tiny-fragments">Tiny Fragments</a></li>
+<li><a class="reference internal" href="#excessive-hop-by-hop-options">Excessive Hop-By-Hop Options</a></li>
+<li><a class="reference internal" href="#padn-covert-channel">PadN Covert Channel</a></li>
+<li><a class="reference internal" href="#address-scopes">Address Scopes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="running.html"
+                        title="previous chapter">Running ft6</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="results.html"
+                        title="next chapter">Interpreting the Results</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tests.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="results.html" title="Interpreting the Results"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="Running ft6"
+             >previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Oliver Eggert, Simon Kiertscher, Bettina Schnor.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

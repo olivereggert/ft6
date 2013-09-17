@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; ft6 - Firewall Tester for IPv6 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ft6 - Firewall Tester for IPv6 1.0 documentation" href="index.html" />
+    <link rel="next" title="Running ft6" href="running.html" />
+    <link rel="prev" title="Welcome to ft6 - Firewall Tester for IPv6’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="running.html" title="Running ft6"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to ft6 - Firewall Tester for IPv6’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>The &#8220;Firewall Tester for IPv6&#8221;, or <em>ft6</em>, is a tool you can use to test how your firewall handles IPv6.
+This document covers the basic architecture of ft6, how to install it, set it up and run it. We explain the tests and what to make of the results. We even show how to build your very own test yourselves! Some familiarity with the the TCP/IP Stack and IPv6 in particular is assumed.</p>
+<p>This document and ft6 itself are being released under the <a class="reference external" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons Attribution-NonCommercial-ShareAlike 3.0</a> license. ft6 was written in cooperation with <a class="reference external" href="http://www.eantc.de">EANTC</a> as part of the project <a class="reference external" href="http://www.ipv6-ids.de">IPv6 Intrusion Detection System</a>, funded by <a class="reference external" href="http://www.bmbf.de/">BMBF</a>.</p>
+<div class="section" id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
+<p>ft6 is a client-server application. The client will send data over the network, which the server attempts to capture. The server will then send back to the client a list of messages it received. That way, the client will know what messages were blocked (or lost) along the way.</p>
+<p>Note the word &#8220;lost&#8221; in the parentheses above. Client and server will not be able to figure out <em>why</em> a message wasn&#8217;t received at the server. They will, however, always assume that a packet was lost due to the firewall blocking it. To make the results meaningful you must make sure to not acidentally test some other devices as well. When setting up, it is therefore important to place the client and server <em>directly</em> one hop away from your firewall, to ensure that no other devices are interfering with the traffic.</p>
+<p>Most communication will be sent via UDP with the destination port defaulting to 80 (www). That means you need to provide at least one open port for ft6 to work. Also, if your firewall policies are very different for each service you provide, it might be useful to check each port separately.
+ft6 marks packets with strings like &#8220;XXXXXXTest1Step1&#8221;. If your firewall rules match such strings ft6 will likely fail. Client and server also perform a kind of <em>handshake</em>, by sending messages &#8220;StartTest <em>n</em>&#8221;, &#8220;EndTest <em>n</em>&#8221;, &#8220;StartResult <em>n</em>&#8221;, &#8220;EndResult <em>n</em>&#8221; and &#8220;ACKNOWLEDGED&#8221; (with <em>n</em> being and integer). Please don&#8217;t block those either.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#architecture">Architecture</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to ft6 - Firewall Tester for IPv6&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="running.html"
+                        title="next chapter">Running ft6</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="running.html" title="Running ft6"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to ft6 - Firewall Tester for IPv6’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Oliver Eggert, Simon Kiertscher, Bettina Schnor.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

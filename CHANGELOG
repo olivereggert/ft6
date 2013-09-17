@@ -1,0 +1,26 @@
+2013-07-28:
+	+ Fixed a bug that caused ft6 to crash in some cases while performing the ICMPv6 Filtering test
+	+ Added a "demo mode": you can start it with "./client.py --demo". No packets will be sent but ft6 will still
+	  display some results (these are the results I get in my lab using iptables). 
+      With the demo mode, you can easily showcase ft6 without the need to bring a server and a firewall.
+	+ Added a configuration: when you start a new session your settings are saved to ft6.conf so that they can
+	  be reused the next time you run ft6. This allows you to test the same device multiple times without having
+	  to enter addresses and ports every time.
+
+2013-06-19:
+	+ Added copyright and licensing information
+	+ moved the tiny fragments timeout to a separate test
+	+ the tiny fragments timeout test will now only be called if tiny fragments can traverse the firewall
+	  this is being discovered in the "normal" tiny fragments test
+	+ changed the statuses (stati??) of the icmp tests for the non-filtered tests:
+		cisco asa won't forward messages like "message too big" if the server doesn't actually send a packet that
+		is too big.. so it's more stateful that we'd imagined.
+		we don't send packets that are too big right now, so if the server doesn't receive the "icmp warning packet too big"
+		it doesn't neccessarily mean that it was wrongly dropped.. Ugh, if you read this until here you notice that 
+		these kinds of tests are hard to right... so for all these cases the states are now "WARNING"
+	+ changed the statuses for routing header tests. This was basically done for the same reasons.
+		With these changes we want to reflect that the firewall dropping a valid routing header is BETTER than 
+		the firewall forwarding an invalid one.
+	+ It is no longer neccessary to specify the link local addresses of client and server, these are now determined
+		automagically!
+	

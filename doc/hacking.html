@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Hacking ft6 &mdash; ft6 - Firewall Tester for IPv6 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ft6 - Firewall Tester for IPv6 1.0 documentation" href="index.html" />
+    <link rel="prev" title="Interpreting the Results" href="results.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="results.html" title="Interpreting the Results"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="hacking-ft6">
+<h1>Hacking ft6<a class="headerlink" href="#hacking-ft6" title="Permalink to this headline">¶</a></h1>
+<p>ft6 is released under <a class="reference external" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA</a>. That means you are free to improve it and implement your own tests!</p>
+<p>To write your own test, create a new subclass of <tt class="docutils literal"><span class="pre">class</span> <span class="pre">Test</span></tt> (see <strong>test.py</strong>). Each test needs</p>
+<ul class="simple">
+<li>an id</li>
+<li>a name</li>
+<li>a description</li>
+<li>an overridden method <tt class="docutils literal"><span class="pre">execute()</span></tt>, in which the client sents the packets.</li>
+<li>an overridden method <tt class="docutils literal"><span class="pre">evaluate(list_of_packets)</span></tt>, in which the server loops through the list of received packets and creates the human-readable strings to be used by the user interface.</li>
+</ul>
+<div class="section" id="building-your-test">
+<h2>Building your test<a class="headerlink" href="#building-your-test" title="Permalink to this headline">¶</a></h2>
+<p>In this example we&#8217;ll build our own test, to see if packets containing the string &#8220;randomword&#8221; can traverse the firewall. First, we create a new class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">TestRandomWord</span><span class="p">(</span><span class="n">Test</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">test_settings</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TestRandomWord</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">test_settings</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note the neccessity to call the parent constructor. The variable <tt class="docutils literal"><span class="pre">test_settings</span></tt> provides access to the information the user entered in the user interface. You have access to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># IPv6 addresses:</span>
+<span class="n">test_settings</span><span class="o">.</span><span class="n">dst</span>
+<span class="n">test_settings</span><span class="o">.</span><span class="n">src</span>
+
+<span class="c"># link local addresses needed for MLD:</span>
+<span class="n">test_settings</span><span class="o">.</span><span class="n">target_ll</span>
+<span class="n">test_settings</span><span class="o">.</span><span class="n">source_ll</span>
+
+<span class="c"># port numbers:</span>
+<span class="n">test_settings</span><span class="o">.</span><span class="n">open_port</span>
+<span class="n">test_settings</span><span class="o">.</span><span class="n">closed_port</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">app</span></tt>-variable is needed to communicate with the user interface. You can just pass it along. Next, we&#8217;ll implement the <tt class="docutils literal"><span class="pre">execute</span></tt> method. You&#8217;ll see a lot of scapy code there, so if you don&#8217;t understand that, check the official <a class="reference external" href="http://www.secdev.org/projects/scapy/doc/">documentation</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">e</span>  <span class="o">=</span> <span class="n">Ether</span><span class="p">(</span><span class="n">dst</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_settings</span><span class="o">.</span><span class="n">router_mac</span><span class="p">)</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="n">IPv6</span><span class="p">(</span><span class="n">dst</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_settings</span><span class="o">.</span><span class="n">dst</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_settings</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+    <span class="n">udp</span><span class="o">=</span> <span class="n">UDP</span><span class="p">(</span><span class="n">dport</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_settings</span><span class="o">.</span><span class="n">open_port</span><span class="p">,</span> <span class="n">sport</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="s">&quot;ipv6-qab&quot;</span><span class="o">*</span><span class="mi">128</span>
+
+    <span class="n">packet</span> <span class="o">=</span> <span class="n">e</span><span class="o">/</span><span class="n">ip</span><span class="o">/</span><span class="n">udp</span><span class="o">/</span><span class="p">(</span><span class="n">payload</span> <span class="o">+</span> <span class="s">&quot;randomword&quot;</span><span class="p">)</span>
+    <span class="n">sendp</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span>
+
+    <span class="n">packet</span> <span class="o">=</span> <span class="n">e</span><span class="o">/</span><span class="n">ip</span><span class="o">/</span><span class="n">udp</span><span class="p">(</span><span class="n">payload</span> <span class="o">+</span> <span class="s">&quot;someotherword&quot;</span><span class="p">)</span>
+    <span class="n">sendp</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We&#8217;ve built a packet, and given it the marker &#8220;ipv6-qab&#8221; (don&#8217;t ask :)). We&#8217;ve also added the &#8220;randomword&#8221; we&#8217;re trying to smuggle through the firewall and given the packet to scapy&#8217;s <em>sendp</em>-function. While you <em>could</em> craft the packets in binary, by hand, we suggest that you also use scapy to create packets. It&#8217;s so easy, it&#8217;s almost ridiculous! Client and server will perform their handshake and send the packets. After the server eventually receives the &#8220;EndTest&#8221;-command it will call the test&#8217;s <tt class="docutils literal"><span class="pre">evaluate</span></tt> method and pass a list of all packets received as a parameter. We need to return a list of results, the strings that will be displayed in the user interface. So let&#8217;s write that method now:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packets</span><span class="p">):</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">found_random</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">found_other</span>  <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="c"># iterate over the packets, filter those that belong to the test</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">packets</span><span class="p">:</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">lastlayer</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&quot;ipv6-qab&quot;</span> <span class="ow">in</span> <span class="n">tag</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c"># check our randomword packet made it</span>
+        <span class="k">if</span> <span class="s">&quot;randomword&quot;</span> <span class="ow">in</span> <span class="n">tag</span><span class="p">:</span>
+            <span class="n">found_random</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">if</span> <span class="s">&quot;someotherword&quot;</span> <span class="ow">in</span> <span class="n">tag</span><span class="p">:</span>
+            <span class="n">found_pther</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+    <span class="c"># done looping through the packets, now build results for the gui</span>
+    <span class="k">if</span> <span class="n">found_random</span><span class="p">:</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;Success&quot;</span><span class="p">,</span> <span class="s">&quot;Your firewall forwarded a packet with a random word!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;Failure&quot;</span><span class="p">,</span> <span class="s">&quot;Your firewall dropped a packet with a random word!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">found_other</span><span class="p">:</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;Warning&quot;</span><span class="p">,</span> <span class="s">&quot;Your firewall forwarded packet a with some other word. That&#39;s very weird!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;Success&quot;</span><span class="p">,</span> <span class="s">&quot;Your firewall dropped a packet with some other word. Well done firewall!&quot;</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">results</span>
+</pre></div>
+</div>
+<p>Please note the three different states (<em>&#8220;Success&#8221;, &#8220;Failure&#8221;</em> or <em>&#8220;Warning&#8221;</em>) that a result can have. You&#8217;ll need to provide one of those.
+That&#8217;s it. Congratulation on writing your first test! Finally, we need to make the test available to the user interface. This is done in <strong>test.py</strong>, in the <tt class="docutils literal"><span class="pre">TestManager</span></tt>-class. Instantiate an object of your new class and register it with the application:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># create test classes, store them in the dictionary so they can later be called by their id</span>
+<span class="n">tICMP</span> <span class="o">=</span> <span class="n">TestICMP</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;ICMPv6 Filtering&quot;</span><span class="p">,</span> <span class="s">&quot;The ICMP Test&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_settings</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">registerTest</span><span class="p">(</span><span class="n">tICMP</span><span class="p">)</span>
+
+<span class="o">...</span>
+
+<span class="n">tRandomWord</span> <span class="o">=</span> <span class="n">TestRandomWord</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="s">&quot;My Random Word Test&quot;</span><span class="p">,</span> <span class="s">&quot;Tests for Random Words&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_settings</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">registerTest</span><span class="p">(</span><span class="n">tRandomWord</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now the user interface can query the TestManager and will find your new test! That&#8217;s it!</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Hacking ft6</a><ul>
+<li><a class="reference internal" href="#building-your-test">Building your test</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="results.html"
+                        title="previous chapter">Interpreting the Results</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/hacking.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="results.html" title="Interpreting the Results"
+             >previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Oliver Eggert, Simon Kiertscher, Bettina Schnor.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

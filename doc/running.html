@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Running ft6 &mdash; ft6 - Firewall Tester for IPv6 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ft6 - Firewall Tester for IPv6 1.0 documentation" href="index.html" />
+    <link rel="next" title="Understanding the tests" href="tests.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tests.html" title="Understanding the tests"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="running-ft6">
+<h1>Running ft6<a class="headerlink" href="#running-ft6" title="Permalink to this headline">¶</a></h1>
+<p>This section lists the requirements and provides a walk-through of a simple ft6 test session.</p>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>You need to have the following software on both your client and server machine <a class="footnote-reference" href="#id2" id="id1">[1]</a>:</p>
+<ul>
+<li><p class="first">Python. The programming language ft6 was written in.
+ft6 should work with versions 2.5 and above. Our developement version was 2.7.3 and was installed using:</p>
+<div class="highlight-python"><pre>$ apt-get install python2.7</pre>
+</div>
+<p>See <a class="reference external" href="http://www.python.org">http://www.python.org</a> for further instructions.</p>
+</li>
+<li><p class="first">PyQt4. Bindings for Qt4, the framework for the graphical user interface.
+Our developement version was 4.9.3-4 and was installed using:</p>
+<div class="highlight-python"><pre>$ apt-get install python-qt4</pre>
+</div>
+<p>See <a class="reference external" href="http://www.riverbankcomputing.co.uk/software/pyqt/intro">http://www.riverbankcomputing.co.uk/software/pyqt/intro</a> for further instructions.</p>
+</li>
+<li><p class="first">Scapy. The framework for network package creation and manipulation.
+Our developement version was 2.2.0.
+Note: Scapy&#8217;s website incorrectly links scapy-2.1.0 as the &#8220;latest release&#8221;. To download and install scapy-2.2.0 manually you do:</p>
+<div class="highlight-python"><pre>$ wget http://www.secdev.org/projects/scapy/files/scapy-2.2.0.tar.gz
+$ tar xvfz scapy-2.2.0
+$ cd scapy-2.2.0
+$ sudo python setup.py install</pre>
+</div>
+<p>See <a class="reference external" href="http://www.secdev.org/projects/scapy">http://www.secdev.org/projects/scapy</a> for further instructions.</p>
+</li>
+<li><p class="first">ft6. The firewall tester for IPv6.
+If you are reading this document, chances are that you&#8217;ve already downloaded ft6. If not, type:</p>
+<div class="highlight-python"><pre>wget www.ipv6-ids.de/files/ft6-1.0.tar.gz
+tar xvfz ft6-1.0.tar.gz
+cd ft6-1.0</pre>
+</div>
+<p>You can run the python scripts without any installation. A privileged account is needed for scapy to create network packets.</p>
+</li>
+</ul>
+<p>That&#8217;s it! Now you should be ready to run ft6. To verify your installation you can try:</p>
+<div class="highlight-python"><pre>$ python
+[...]
+&gt;&gt;&gt; import PyQt4
+&gt;&gt;&gt; (Ctrl-D to exit)
+
+$ scapy
+&gt;&gt;&gt; (Ctrl-D to exit)</pre>
+</div>
+<p>If no errors occured and the version numbers reported by python and scapy are correct you are done.</p>
+</div>
+<div class="section" id="setting-up">
+<h2>Setting Up<a class="headerlink" href="#setting-up" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Have a machine on the internal side of your network. We&#8217;ll call this machine <em>S</em>.</p>
+</li>
+<li><p class="first">Have a machine on the external side of your network. We&#8217;ll call this machine <em>C</em>.</p>
+</li>
+<li><p class="first">Make sure that only the firewall lies between C and S. Other devices might interfere.</p>
+</li>
+<li><p class="first">On S, start the server application:</p>
+<div class="highlight-python"><pre>$ sudo ./ft6-server.py</pre>
+</div>
+<p>You can specify the IPv6 address and the the server should listen to via:</p>
+<div class="highlight-python"><pre>$ sudo ./ft6-server.py &lt;address&gt; &lt;port&gt;</pre>
+</div>
+<p>Alternatively, the program will try to figure out the available IPv6 addresses and ask you to choose one.</p>
+</li>
+<li><p class="first">On C, start the client applicatipon:</p>
+<div class="highlight-python"><pre>$ sudo ./ft6-client.py</pre>
+</div>
+<p>No command line arguments required. You will see a user interface like this:</p>
+</li>
+</ul>
+<img alt="The graphical user interaface of ft6." class="align-center" src="_images/ft6-gui.jpg" />
+</div>
+<div class="section" id="running">
+<h2>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Fill in the correct information. On our network, the server is listening to <tt class="docutils literal"><span class="pre">2001:2:2::b</span></tt>, so we enter that into the <em>target address</em> field.
+For testing <a class="reference external" href="http://tools.ietf.org/html/rfc2710#section-3">Multicast Listener Discovery</a>, ft6 needs the link-local addresses of the client&#8217;s and server&#8217;s network interface. You can determine these using <tt class="docutils literal"><span class="pre">ifconfig</span></tt> or a similar tool. Look for lines that say <em>&#8220;inet6&#8221;</em> and <em>&#8220;Scope:Link&#8221;</em>.</p>
+<p>We&#8217;re well aware of how painful this is and are currently thinking about ways to automate this step. Sorry.</p>
+</li>
+<li><p class="first">Enter the ports that ft6 should use. All communication will use the <em>open port</em>. When testing fragmenting attacks ft6 tries to connect to a port that&#8217;s not permitted by the firewall. Enter anything you think your firewall blocks into the field called <em>closed port</em>.</p>
+</li>
+<li><p class="first">Select what tests to run by ticking or unticking the checkboxes, then press <em>Start</em>. You are now testing your firewall. Running all tests should take less than 5 minutes. Some tests take longer than others, give them some time. Watch the statusbar at the bottom of the interface and don&#8217;t surrender early.</p>
+</li>
+</ul>
+<img alt="The graphical user interface of ft6 with the statusbar stating that the tiny-fragments test will take slightly more that two minutes" class="align-center" src="_images/ft6-tiny.jpg" />
+<ul class="simple">
+<li>The <em>Results</em> box will become populated with results that are already finished. They are color-coded so you can easily see where your firewall is having trouble. You can click the items in the box to show details.</li>
+</ul>
+<img alt="The details window of ft6. It shows one entry for each packet and says whether the packet was forwarded or dropped. It also shows a color-coded representation of whether dropping or forwarding was correct or not." class="align-center" src="_images/ft6-details.jpg" />
+<ul class="simple">
+<li>You see an entry for each network packet ft6 sent. Each item shows you two things:<ol class="arabic">
+<li>It tells you what action the firewall performed, i.e. whether the firewall dropped the packet or forwarded it. It says so in the description text.</li>
+<li>It tells you whether that action was correct or incorrect. This is reflected by the coloring of the item. As you might imagine, <em>green</em> stands for &#8220;correct&#8221;, <em>red</em> stands for &#8220;incorrect&#8221; and <em>yellow</em> stands for &#8220;technically correct, but pretty strange, did you really want your firewall to behave that way?&#8221;</li>
+</ol>
+</li>
+<li>Once all tests have completed you can click <em>create logfile</em>, which will write the result of every test into a textfile in ft6&#8217;s working directory, named <em>ft6-report-&lt;currentDateAndTime&gt;.txt</em>. That concludes your firewall test session.</li>
+</ul>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Note: If you are using the aptitude based packet management like we do we recommend to run <tt class="docutils literal"><span class="pre">apt-get</span> <span class="pre">update</span></tt> first.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Running ft6</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#setting-up">Setting Up</a></li>
+<li><a class="reference internal" href="#running">Running</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tests.html"
+                        title="next chapter">Understanding the tests</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/running.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tests.html" title="Understanding the tests"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Oliver Eggert, Simon Kiertscher, Bettina Schnor.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

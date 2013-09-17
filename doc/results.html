@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Interpreting the Results &mdash; ft6 - Firewall Tester for IPv6 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ft6 - Firewall Tester for IPv6 1.0 documentation" href="index.html" />
+    <link rel="next" title="Hacking ft6" href="hacking.html" />
+    <link rel="prev" title="Understanding the tests" href="tests.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="hacking.html" title="Hacking ft6"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tests.html" title="Understanding the tests"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="interpreting-the-results">
+<h1>Interpreting the Results<a class="headerlink" href="#interpreting-the-results" title="Permalink to this headline">¶</a></h1>
+<p>Although we&#8217;ve tried to automate the process of testing and analyzing, there are cases in which you have to interpret the data yourself.
+One example happend when testing our firewall, running the <a class="reference internal" href="tests.html#label-icmpv6-filtering"><em>ICMPv6 Filtering</em></a>:</p>
+<p>It showed that 4 ICMPv6 messages had been incorrectly dropped (<em>Destination Unreachable</em>, <em>Packet Too Big</em>, <em>Time Exceeded</em> and <em>Parameter Problem</em>) whilst all others had been handled correctly. Even when configuring policies to explicitly allow these packets, they still didn&#8217;t get through to the server. So we concluded that the firewall was not too stupid but in fact <em>too smart</em>: This becomes clear when thinkin about what these messages are saying: &#8220;There was a problem with the packet I just received&#8221;. Because the server never sent a packet that was too big, the client &#8220;responding&#8221; with <em>Packet Too Big</em> doesn&#8217;t make much sense. We guessed that the firewall was stateful enough to detect that.</p>
+<p>Another issue occured when performing <a class="reference internal" href="tests.html#label-tiny-fragments"><em>Tiny Fragments</em></a>:
+The firewall appeared to be dropping all tiny fragments, even the ones that were valid. ft6 reported that the firewall was <em>incorrectly dropping</em> tiny fragments too early after 55 seconds and <em>correctly not waiting too long</em>, because after 65 seconds the packet didn&#8217;t arrive any more.
+Of course, when the firewall drops all tiny fragments, the statements about the timeout are not very meaningful any more.</p>
+<p>After a lengthy discussion we still chose to keep it that way. There are just too many unforseen things that could happen that we feel we are never able to <em>completely</em> analyze the tests <em>automatically</em>. We think it&#8217;s best to keep the tool simple and trust in your ability to come up with smart interpretation.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tests.html"
+                        title="previous chapter">Understanding the tests</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hacking.html"
+                        title="next chapter">Hacking ft6</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/results.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="hacking.html" title="Hacking ft6"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tests.html" title="Understanding the tests"
+             >previous</a> |</li>
+        <li><a href="index.html">ft6 - Firewall Tester for IPv6 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Oliver Eggert, Simon Kiertscher, Bettina Schnor.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
