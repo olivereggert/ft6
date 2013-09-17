@@ -3,7 +3,7 @@
 Got a firewall? Think it is _ipv6-ready_? With ft6 you can find out just _how_ ready it is!
 ft6 is a _client-server_ program written in python that tests various IPv6 related features and security aspects.
 
-# Meta
+## Meta
 
 First things first: This is a fork of the software developed during [this project](http://www.idsv6.de/en). The project was held at University of Potsdam and is now finished.
 I was a student assistent working on the project and programmer of ft6.
@@ -11,8 +11,12 @@ I now continue to develop ft6 on my own, without any involvement of the universi
 
 My thanks to [all](http://cs.uni-potsdam.de/bs) [project](http://prof.beuth-hochschule.de/scheffler) [associates](http://www.eantc.de)
 
+## License
 
-# Setup
+Ft6 is released under [CC BY-NC-SA 3.0](http://creativecommons.org/licenses/by-nc-sa/3.0/).
+
+
+## Setup
 To use ft6 you'll need two machines connected directly to your firewall.
 On the _'internal'_ side of the firewall, run ./server.py. On the _'external'_ side, run ./client.py
 Again: ft6 assumes that there is a firewall in between the client and server.
@@ -23,7 +27,7 @@ The _server_ then sends a list of _results_ back to the _client_. Finally, the _
 graphcial user interface.
 
 
-# Requirements
+## Requirements
 ft6 is powered by 
 
 - [python](http://www.python.org/)
