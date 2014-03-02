@@ -282,7 +282,7 @@ class TestSettings():
         result = srp1(packet, iface=self.iface)
         # dirty hack to make my virtual machine environment working -- fix soon!        
         if result == None:
-            result = "08:00:27:de:fb:ef"
+            result = "08:00:27:c8:2a:ff"
         else:
             result = result[Ether].src
             result = str(result).lower()
@@ -344,6 +344,14 @@ class Test(object):
         p.addPayload(self.id, self._num_packets)
 
         self.packets.append(p)
+
+    def _getPacket(self, tag):
+        for packet in self.packets:
+            if packet.tag == tag:
+                return packet
+
+        return None
+
 
 
 class TestICMP(Test):
@@ -686,10 +694,11 @@ class TestRoutingHeader(Test):
         rh=IPv6ExtHdrRouting(type=0, addresses=[self.test_settings.source_ll, self.test_settings.target_ll], segleft=0)
         packet=e/ip/rh/udp/(payload+"XXXXXXTest2Step1")
 
-        p = Packet(e/ip/rh/udp)
+        p = Ft6Packet(e/ip/rh/udp)
         p.setValid()
-        p.ifDropped("Success!", "The firewall forwarded a valid RH")
-        p.ifForwarded("Failure!", "The firewall dropped a valid RH")
+        p.setDescription("")
+        p.ifDropped("The firewall forwarded a valid RH")
+        p.ifForwarded("The firewall dropped a valid RH")
 
 
         sendp(packet)
@@ -1578,12 +1587,22 @@ class TestMyTest(Test):
         super(TestMyTest, self).__init__(id, name, description, test_settings, app)
 
     def prepare(self):
-        # configure the settings shared between packets
-        e = Ether(dst=self.test_settings.router_mac)
-        ip=IPv6(dst=self.test_settings.dst, src=self.test_settings.src)
-        udp=UDP(dport=self.test_settings.open_port, sport=4444)
 
-        rh=IPv6ExtHdrRouting(type=0, addresses=[self.test_settings.source_ll, self.test_settings.target_ll], segleft=0)
+        # configure the settings shared between packets
+        if not hasattr(self, "test_settings") or self.test_settings == None:
+            e = Ether()
+            ip = IPv6()
+            udp = UDP()
+            source_ll = ""
+            target_ll = ""
+        else :
+            e = Ether(dst=self.test_settings.router_mac)
+            ip = IPv6(dst=self.test_settings.dst, src=self.test_settings.src)
+            udp = UDP(dport=self.test_settings.open_port, sport=4444)
+            source_ll = self.test_settings.source_ll
+            target_ll = self.test_settings.target_ll
+
+        rh=IPv6ExtHdrRouting(type=0, addresses=[source_ll, target_ll], segleft=0)
         p = Ft6Packet(e/ip/rh/udp)
         p.setValid()
         p.setDescription("a valid Routing Header Type 0, with 'segments left' set to zero") 
@@ -1653,6 +1672,9 @@ class TestMyTest(Test):
             time.sleep(1)
 
     def evaluate(self, packets):
+        
+        self.prepare()
+        
         print "Evaluating the %s Test. Got %d packets" % (self.name, len(packets))
         
         results = []
@@ -1660,59 +1682,68 @@ class TestMyTest(Test):
         # store the the last 16 Characters of the uppermost layer of every packet.
         # those should contain the strings that tell the server which packets arrived
         steps = []
-        
+        tags = []
         # do some minor regex magic that will prase out the "step numbers" of all tags that have "test2" in them
         for p in packets:
             tag = str(p.lastlayer())
-                    
+
             # stop examining this packet if it doesn't belong to our test.
             if not "ipv6-qab" in tag:
                 continue
             
             # only examine the last 16 letters
             tag = tag[-16:]
-            step = re.sub(r"[X]+Test2Step", "", tag)
+            tags.append(tag) 
             
-            steps.append(step)
-        
-        # RH 0 with segments left = 0 must make it to the other side
-        if '1' in steps:
-            results.append("Success! The firewall FORWARDED a 'routing header type 0' packet with 'segments left' set to zero")
-        else:
-            results.append("Warning! The firewall DROPPED a 'routing header type 0' packet with 'segments left' set to zero. This is not in accordance with RFC 5095. However, many firewalls chose to drop Routing Headers in general, so dropping this valid header is in some way better than forwarding the invalid header!")
+
+        for packet in self.packets:
             
-        # RH 0 with segmetns left != 0 must be dropped
-        if '2' in steps:
-            results.append("Failure! The firewall FORWARADED a 'routing header type 0' (with 'segments left' set to a non-zero value). This is not in accordance with RFC 5095.")
-        else:
-            results.append("Success! The firewall DROPPED a 'routing header type 0' packet with 'segments left' set to a non-zero value")
-        
-        
-        
-        # RH 2 with segments left != 1 must be dropped
-        if '3' in steps:
-            results.append("Failure! The firewall FORWARDED a 'routing header type 2' (with 'segments left' set to a value other than one). This is not in accordance with RFC 3775. Even if you need routing header 2, 'segments left' must be equal to 'one' ")
-        else:
-            results.append("Success! The firewall DROPPED a 'routing header type 2' packet with 'segments left' set to a value other than one")
-        
-        # RH 2 with segments left = 1 may make it to the other side
-        if '4' in steps:
-            results.append("Warning! The firewall FORWARDED a 'routing header type 2' packet with 'segments left' set to one. However, you should only allow Routing Header Type 2 if you need MobileIP Support.");
-        else:
-            results.append("Warning! The firewall DROPPED a 'routing header type 2' packet with 'segments left' set to one. This is not in accordance with RFC 3775. However, many firewalls chose to drop Routing Headers in general, so dropping this valid header is in some way better than forwarding the invalid header!")
-        
-        
-            
-        # RH 200 with segments left = 0 may make it to the other side
-        if '5' in steps:
-            results.append("Warning! The firewall FORWARDED an unallocated routing header type 200 (with 'segments left' set to zero). You should filter those unless you really need it")
-        else:
-            results.append("Warning! The firewall DROPPED an 'unallocated routing header type 200' with 'segments left' set to zero. However, many firewalls chose to drop Routing Headers in general, so dropping this valid header is in some way better than forwarding the invalid header!")
-    
-        # RH 200 with segments left != 0 must be dropped
-        if '6' in steps:
-            results.append("Failure! The firewall FORWARDED an unallocated routing header type 200 (with 'segments left' set to a non-zero value). This violates RFC 2460")
-        else:
-            results.append("Success! The firewall DROPPED an 'unallocated routing header type 200' with 'segments left' set to a non-zero value")
+            if packet.tag in tags:
+                results.append(packet.forwarded_state + packet.forwarded_message)
+            else:
+                results.append(packet.dropped_state + packet.dropped_message)
 
         return results
+
+##        # RH 0 with segments left = 0 must make it to the other side
+#        if '1' in steps:
+#            results.append("Success! The firewall FORWARDED a 'routing header type 0' packet with 'segments left' set to zero")
+#        else:
+#            results.append("Warning! The firewall DROPPED a 'routing header type 0' packet with 'segments left' set to zero. This is not in accordance with RFC 5095. However, many firewalls chose to drop Routing Headers in general, so dropping this valid header is in some way better than forwarding the invalid header!")
+#            
+#        # RH 0 with segmetns left != 0 must be dropped
+#        if '2' in steps:
+#            results.append("Failure! The firewall FORWARADED a 'routing header type 0' (with 'segments left' set to a non-zero value). This is not in accordance with RFC 5095.")
+#        else:
+#            results.append("Success! The firewall DROPPED a 'routing header type 0' packet with 'segments left' set to a non-zero value")
+#        
+#        
+#        
+#        # RH 2 with segments left != 1 must be dropped
+#        if '3' in steps:
+#            results.append("Failure! The firewall FORWARDED a 'routing header type 2' (with 'segments left' set to a value other than one). This is not in accordance with RFC 3775. Even if you need routing header 2, 'segments left' must be equal to 'one' ")
+#        else:
+#            results.append("Success! The firewall DROPPED a 'routing header type 2' packet with 'segments left' set to a value other than one")
+#        
+#        # RH 2 with segments left = 1 may make it to the other side
+#        if '4' in steps:
+#            results.append("Warning! The firewall FORWARDED a 'routing header type 2' packet with 'segments left' set to one. However, you should only allow Routing Header Type 2 if you need MobileIP Support.");
+#        else:
+#            results.append("Warning! The firewall DROPPED a 'routing header type 2' packet with 'segments left' set to one. This is not in accordance with RFC 3775. However, many firewalls chose to drop Routing Headers in general, so dropping this valid header is in some way better than forwarding the invalid header!")
+#        
+#        
+#            
+#        # RH 200 with segments left = 0 may make it to the other side
+#        if '5' in steps:
+#            results.append("Warning! The firewall FORWARDED an unallocated routing header type 200 (with 'segments left' set to zero). You should filter those unless you really need it")
+#        else:
+#            results.append("Warning! The firewall DROPPED an 'unallocated routing header type 200' with 'segments left' set to zero. However, many firewalls chose to drop Routing Headers in general, so dropping this valid header is in some way better than forwarding the invalid header!")
+#    
+#        # RH 200 with segments left != 0 must be dropped
+#        if '6' in steps:
+#            results.append("Failure! The firewall FORWARDED an unallocated routing header type 200 (with 'segments left' set to a non-zero value). This violates RFC 2460")
+#        else:
+#            results.append("Success! The firewall DROPPED an 'unallocated routing header type 200' with 'segments left' set to a non-zero value")
+#    
+#        return results
+
